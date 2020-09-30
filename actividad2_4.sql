@@ -10,7 +10,7 @@ Where DAT.ID not in(
 -- 2  Listado con apellidos y nombres de los usuarios que se hayan inscripto a cursos pero no hayan realizado ningún pago.
 Select DAT.Apellidos, DAT.Nombres
 From Datos_Personales DAT
-Where DAT.ID not in(
+Where DAT.ID NOT IN(
 	Select Distinct I.IDUsuario
 	From Inscripciones I
 	Inner Join Pagos P on I.ID = P.IDInscripcion
@@ -61,32 +61,29 @@ Where CONT.Tamaño < (
 )
 
 -- (7)  Listado con nombre de país y la cantidad de usuarios de género masculino y la cantidad de usuarios de género femenino que haya registrado.
-Select AUX.Nombre as País, AUX.[Cantidad género M], AUX.[Cantidad género F] From(
-	Select P.Nombre,
-	(
-		Select count(*) From Datos_Personales DAT
-		Where DAT.Genero Like 'M' and DAT.IDPais = P.ID
-	) as 'Cantidad género M',
-	(
-		Select count(*) From Datos_Personales DAT
-		Where DAT.Genero Like 'F' and DAT.IDPais = P.ID
-	) as 'Cantidad género F'
-	From Paises P
-) as AUX
+Select P.Nombre,
+(
+	Select count(*) From Datos_Personales DAT
+	Where DAT.Genero Like 'M' and DAT.IDPais = P.ID
+) as 'Cantidad género M',
+(
+	Select count(*) From Datos_Personales DAT
+	Where DAT.Genero Like 'F' and DAT.IDPais = P.ID
+) as 'Cantidad género F'
+From Paises P
+
 
 -- 8  Listado con apellidos y nombres de los usuarios y la cantidad de inscripciones realizadas en el 2019 y la cantidad de inscripciones realizadas en el 2020.
-Select AUX.Apellidos, AUX.Nombres, AUX.[Cant. Insc. 2019], AUX.[Cant. Insc. 2020] From(
-	Select DAT.Apellidos, DAT.Nombres,
-	(
-		Select count(*) From Inscripciones I
-		Where YEAR(I.Fecha) = 2019 and I.IDUsuario = DAT.ID
-	) as 'Cant. Insc. 2019',
-	(
-		Select count(*) From Inscripciones I
-		Where YEAR(I.Fecha) = 2020 and I.IDUsuario = DAT.ID
-	) as 'Cant. Insc. 2020'
-	From Datos_Personales DAT
-) as AUX
+Select DAT.Apellidos, DAT.Nombres,
+(
+	Select count(*) From Inscripciones I
+	Where YEAR(I.Fecha) = 2019 and I.IDUsuario = DAT.ID
+) as 'Cant. Insc. 2019',
+(
+	Select count(*) From Inscripciones I
+	Where YEAR(I.Fecha) = 2020 and I.IDUsuario = DAT.ID
+) as 'Cant. Insc. 2020'
+From Datos_Personales DAT
 
 -- 9  Listado con nombres de los cursos y la cantidad de idiomas de cada tipo. Es decir, la cantidad de idiomas de audio, la cantidad de subtítulos y la cantidad de texto de video.
 Select C.Nombre,
@@ -108,42 +105,37 @@ Select C.Nombre,
 From Cursos C
 
 -- 10  Listado con apellidos y nombres de los usuarios, nombre de usuario y cantidad de cursos de nivel 'Principiante' que realizó y cantidad de cursos de nivel 'Avanzado' que realizó.
-Select AUX.Apellidos, AUX.Nombres, AUX.[Cantidad Principiantes], AUX.[Cantidad Avanzados]
-From(
-	Select DAT.Apellidos, DAT.Nombres,
-	(
-		Select count(*) From Cursos C
-		Inner Join Niveles N on C.IDNivel = N.ID
-		Inner Join Inscripciones I on C.ID = I.IDCurso
-		Where N.Nombre = 'Principiante' and I.IDUsuario = DAT.ID
-	) as 'Cantidad Principiantes',
-	(
-		Select count(*) From Cursos C
-		Inner Join Niveles N on C.IDNivel = N.ID
-		Inner Join Inscripciones I on C.ID = I.IDCurso
-		Where N.Nombre = 'Avanzado' and I.IDUsuario = DAT.ID
-	) as 'Cantidad Avanzados'
-	From Datos_Personales DAT
-) as AUX
+Select DAT.Apellidos, DAT.Nombres,
+(
+	Select count(*) From Cursos C
+	Inner Join Niveles N on C.IDNivel = N.ID
+	Inner Join Inscripciones I on C.ID = I.IDCurso
+	Where N.Nombre = 'Principiante' and I.IDUsuario = DAT.ID
+) as 'Cantidad Principiantes',
+(
+	Select count(*) From Cursos C
+	Inner Join Niveles N on C.IDNivel = N.ID
+	Inner Join Inscripciones I on C.ID = I.IDCurso
+	Where N.Nombre = 'Avanzado' and I.IDUsuario = DAT.ID
+) as 'Cantidad Avanzados'
+From Datos_Personales DAT
 
 -- 11  Listado con nombre de los cursos y la recaudación de inscripciones de usuarios de género femenino que se inscribieron y la recaudación de inscripciones de usuarios de género masculino.
-Select AUX.Nombre 'Nombre del curso', AUX.[Recaudación F], AUX.[Recaudación M] From(
-	Select C.Nombre,
-	(
-		Select isnull(sum(I.Costo),0)
-		From Inscripciones I
-		Inner Join Datos_Personales DAT on I.IDUsuario = DAT.ID
-		Where DAT.Genero Like 'F' and C.ID = I.IDCurso
+Select C.Nombre,
+(
+	Select isnull(sum(I.Costo),0)
+	From Inscripciones I
+	Inner Join Datos_Personales DAT on I.IDUsuario = DAT.ID
+	Where DAT.Genero Like 'F' and C.ID = I.IDCurso
 
-	) as 'Recaudación F',
-	(
-		Select isnull(sum(I.Costo),0)
-		From Inscripciones I
-		Inner Join Datos_Personales DAT on I.IDUsuario = DAT.ID
-		Where DAT.Genero Like 'M' and C.ID = I.IDCurso
-	) as 'Recaudación M'
-	From Cursos C
-) as AUX
+) as 'Recaudación F',
+(
+	Select isnull(sum(I.Costo),0)
+	From Inscripciones I
+	Inner Join Datos_Personales DAT on I.IDUsuario = DAT.ID
+	Where DAT.Genero Like 'M' and C.ID = I.IDCurso
+) as 'Recaudación M'
+From Cursos C
 
 -- 12  Listado con nombre de país de aquellos que hayan registrado más usuarios de género masculino que de género femenino.
 Select AUX.Nombre 'Países con más género M que F' From(
@@ -237,4 +229,4 @@ Select AUX.Apellidos, AUX.NombreUsuario From(
 	From Datos_Personales DAT
 	inner join Usuarios U on DAT.ID = U.ID
 ) as AUX
-Where AUX.[Cantidad cursados] > 0 and AUX.[Cantidad Certificados] = 0
+Where AUX.[Cantidad cursados] > 0 AND AUX.[Cantidad Certificados] = 0

@@ -39,6 +39,13 @@ Where year(P.Fecha) = 2019
 Select count(Distinct IxC.IDUsuario) 'Total Instructores'
 From Instructores_x_Curso IxC
 
+Select count(*)'Cantidad instructores'
+From Usuarios U
+Where U.ID in(
+	Select distinct IxC.IDUsuario
+	From Instructores_x_Curso IxC
+)
+
 -- Listado de usuarios distintos de Instructores_x_curso
 Select distinct U.NombreUsuario
 From Usuarios U
@@ -49,6 +56,14 @@ Select count(distinct U.ID) 'Total Certificados'
 From Usuarios U
 Inner Join Inscripciones I on U.ID = I.IDUsuario
 Inner Join Certificaciones CER on I.ID = CER.IDInscripcion
+
+Select count(*)'Cantidad certificados'
+From Usuarios U
+Where U.ID in(
+	Select distinct I.IDUsuario
+	From Inscripciones I
+	Inner Join Certificaciones CER on I.ID = CER.IDInscripcion
+)
 
 -- (13)  Listado con el nombre del país y la cantidad de usuarios de cada país.
 Select P.Nombre, count(DAT.ID) as Cantidad from Paises P
@@ -66,11 +81,11 @@ Group by DAT.Apellidos, DAT.Nombres
 Having max(P.Importe) > 7500
 
 -- 15  Listado con el apellido y nombres de usuario y el importe más costoso de curso al cual se haya inscripto.
-Select DAT.Apellidos, DAT.Nombres, max(I.Costo) 'Más costoso'
+Select DAT.Apellidos, U.NombreUsuario, isnull(max(I.Costo),0)'Importe más costoso de inscripción'
 From Datos_Personales DAT
-Inner Join Inscripciones I on DAT.ID = I.IDUsuario
-Group by DAT.Apellidos, DAT.Nombres
-Order by 1
+left Join Usuarios U on DAT.ID = U.ID
+left Join Inscripciones i on U.ID = I.IDUsuario
+Group by DAT.Apellidos, U.NombreUsuario
 
 -- 16  Listado con el nombre del curso, nombre del nivel, cantidad total de clases y duración total del curso en minutos.
 Select C.Nombre, N.Nombre, count(CL.ID) 'Cantidad de clases', Sum(CL.Duracion) 'Duración total'
@@ -126,12 +141,12 @@ Left Join Niveles N on C.IDNivel = N.ID
 Group by C.Nombre, N.Nombre, C.Estreno
 
 -- 23  Listado con Nombre del curso, costo de cursado y certificación y cantidad de usuarios distintos inscriptos cuyo costo de cursado sea menor a $10000 y cuya cantidad de usuarios inscriptos sea menor a 5. Listar aquellos cursos sin inscripciones con cantidad 0.
-Select C.Nombre as 'Nombre del curso', C.CostoCurso as 'Costo del curso',
-C.CostoCertificacion as 'Costo de certificación', count(distinct I.IDUsuario) as 'Cantidad de inscriptos' 
+Select C.Nombre 'Nombre del curso', C.CostoCurso 'Costo de cursado',
+C.CostoCertificacion 'Costo de certificación', isnull(count(distinct I.IDUsuario),0)'Cantidad de usuarios distintos inscriptos'
 From Cursos C
 Left Join Inscripciones I on C.ID = I.IDCurso
 Group by C.Nombre, C.CostoCurso, C.CostoCertificacion
-Having C.CostoCurso < 10000 and count(distinct I.IDUsuario) < 5 
+Having C.CostoCurso < 10000 and isnull(count(distinct I.IDUsuario),0) < 5
 
 -- 24  Listado con Nombre del curso, fecha de estreno y nombre del nivel del curso que más recaudó en concepto de certificaciones.
 Select Top 1 C.Nombre, C.Estreno, N.Nombre as 'Nivel con mayor rec. en concepto de certificaciones'
@@ -147,7 +162,7 @@ Select top 1 I.Nombre as 'Idioma más usado como subtítulo'
 From Idiomas I
 Inner Join Idiomas_x_Curso IxC on I.ID = IxC.IDIdioma
 Inner Join TiposIdioma TI on IxC.IDTipo = TI.ID
-Where TI.Nombre Like 'subtítulo'
+Where TI.Nombre Like '%subtítulo%'
 
 -- 26  Listado con Nombre del curso y promedio de puntaje de reseñas apropiadas.
 Select C.Nombre as 'Nombre del curso', avg(R.Puntaje) as 'Promedio reseñas apropiadas'
@@ -185,9 +200,9 @@ Group by DAT.Apellidos, DAT.Nombres, DAT.Email
 Having sum(CL.Duracion) > 400
 
 -- 30  Listado con nombre del curso y recaudación total. La recaudación total consiste en la sumatoria de costos de inscripción y de certificación. Listarlos ordenados de mayor a menor por recaudación.
-Select C.Nombre as 'Nombre del curso', sum(I.Costo + CER.Costo) as 'Recaudación Total'
+Select C.Nombre, isnull(sum(I.Costo + CER.Costo),0)'Recaudación total'
 From Cursos C
-Inner Join Inscripciones I on C.ID = I.IDCurso
-Inner Join Certificaciones CER on I.ID = CER.IDInscripcion
+Left Join Inscripciones I ON c.ID = i.IDCurso
+left join Certificaciones CER on I.ID = CER.IDInscripcion
 Group by C.Nombre
-Order by sum(I.Costo + CER.Costo) desc
+Order by [Recaudación total] desc

@@ -67,7 +67,7 @@ Where U.ID in(
 
 -- (13)  Listado con el nombre del país y la cantidad de usuarios de cada país.
 Select P.Nombre, count(DAT.ID) as Cantidad from Paises P
-left join Datos_Personales DAT
+Left join Datos_Personales DAT
 on P.ID = DAT.IDPais
 Group by P.Nombre
 Order by 2 desc
@@ -83,8 +83,8 @@ Having max(P.Importe) > 7500
 -- 15  Listado con el apellido y nombres de usuario y el importe más costoso de curso al cual se haya inscripto.
 Select DAT.Apellidos, U.NombreUsuario, isnull(max(I.Costo),0)'Importe más costoso de inscripción'
 From Datos_Personales DAT
-left Join Usuarios U on DAT.ID = U.ID
-left Join Inscripciones i on U.ID = I.IDUsuario
+Left Join Usuarios U on DAT.ID = U.ID
+Left Join Inscripciones i on U.ID = I.IDUsuario
 Group by DAT.Apellidos, U.NombreUsuario
 
 -- 16  Listado con el nombre del curso, nombre del nivel, cantidad total de clases y duración total del curso en minutos.
@@ -103,10 +103,10 @@ Group by C.Nombre
 Having count(CONT.ID) > 10
 
 -- 18  Listado con nombre del curso, nombre del idioma y cantidad de tipos de idiomas.
-Select C.Nombre as 'Nombre del curso', I.Nombre as 'Nombre del idioma', count(distinct IxC.IDTipo) as 'Cantidad de tipos de idiomas'
+Select isnull(C.Nombre,'N/A') as 'Nombre del curso', I.Nombre as 'Nombre del idioma', count(distinct IxC.IDTipo) as 'Cantidad de tipos de idiomas'
 From Cursos C
 Inner Join Idiomas_x_Curso IxC on C.ID = IxC.IDCurso
-Inner Join Idiomas I on IxC.IDIdioma = I.ID
+Right Join Idiomas I on IxC.IDIdioma = I.ID
 Group by C.Nombre, I.Nombre
 Order by 1
 
@@ -126,15 +126,15 @@ Having count(CxC.IDCurso) > 5
 Order by 1 desc
 
 -- 21  Listado con tipos de contenido y la cantidad de contenidos asociados a cada tipo. Mostrar aquellos tipos que no hayan registrado contenidos con cantidad 0.
-Select TI.Nombre as 'Nombre del tipo de contenidos', count(CONT.IDTipo) as 'Cantidad de contenidos asociados'
+Select TI.Nombre as 'Tipo de contenido', count(CONT.IDTipo) as 'Cantidad de contenidos asociados'
 From TiposContenido TI
-Inner Join Contenidos CONT on TI.ID = CONT.IDTipo
+Right Join Contenidos CONT on TI.ID = CONT.IDTipo
 Group by TI.Nombre
 Having count(CONT.IDTipo) <> 0
 Order by 1 desc
 
 -- 22  Listado con Nombre del curso, nivel, año de estreno y el total recaudado en concepto de inscripciones. Listar aquellos cursos sin inscripciones con total igual a $0.
-Select C.Nombre as 'Nombre del curso', N.Nombre, year(C.Estreno) as 'Año de estreno', sum(I.Costo) as 'Recaudación por inscripciones'
+Select isnull(C.Nombre,'N/A') as 'Nombre del curso', N.Nombre, year(C.Estreno) as 'Año de estreno', sum(I.Costo) as 'Recaudación por inscripciones'
 From Cursos C
 Left Join Inscripciones I on C.ID = I.IDCurso
 Left Join Niveles N on C.IDNivel = N.ID
@@ -142,18 +142,18 @@ Group by C.Nombre, N.Nombre, C.Estreno
 
 -- 23  Listado con Nombre del curso, costo de cursado y certificación y cantidad de usuarios distintos inscriptos cuyo costo de cursado sea menor a $10000 y cuya cantidad de usuarios inscriptos sea menor a 5. Listar aquellos cursos sin inscripciones con cantidad 0.
 Select C.Nombre 'Nombre del curso', C.CostoCurso 'Costo de cursado',
-C.CostoCertificacion 'Costo de certificación', isnull(count(distinct I.IDUsuario),0)'Cantidad de usuarios distintos inscriptos'
+C.CostoCertificacion 'Costo de certificación', count(distinct I.IDUsuario)'Cantidad de usuarios distintos inscriptos'
 From Cursos C
 Left Join Inscripciones I on C.ID = I.IDCurso
 Group by C.Nombre, C.CostoCurso, C.CostoCertificacion
-Having C.CostoCurso < 10000 and isnull(count(distinct I.IDUsuario),0) < 5
+Having C.CostoCurso < 10000 and count(distinct I.IDUsuario) < 5
 
 -- 24  Listado con Nombre del curso, fecha de estreno y nombre del nivel del curso que más recaudó en concepto de certificaciones.
-Select Top 1 C.Nombre, C.Estreno, N.Nombre as 'Nivel con mayor rec. en concepto de certificaciones'
+Select Top 1 C.Nombre, C.Estreno, isnull(N.Nombre,'N/A') as 'Nivel con mayor rec. en concepto de certificaciones'
 From Cursos C
-Inner Join Inscripciones I on C.ID = I.IDCurso
-Inner Join Certificaciones CER on I.ID = CER.IDInscripcion
-Inner Join Niveles N on C.IDNivel = N.ID
+Left Join Inscripciones I on C.ID = I.IDCurso
+Left Join Certificaciones CER on I.ID = CER.IDInscripcion
+Left Join Niveles N on C.IDNivel = N.ID
 Group by C.Nombre, C.Estreno, N.Nombre
 Order by sum(CER.Costo) desc
 
@@ -203,6 +203,6 @@ Having sum(CL.Duracion) > 400
 Select C.Nombre, isnull(sum(I.Costo + CER.Costo),0)'Recaudación total'
 From Cursos C
 Left Join Inscripciones I ON c.ID = i.IDCurso
-left join Certificaciones CER on I.ID = CER.IDInscripcion
+Left join Certificaciones CER on I.ID = CER.IDInscripcion
 Group by C.Nombre
 Order by [Recaudación total] desc
